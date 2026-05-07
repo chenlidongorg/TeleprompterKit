@@ -14,8 +14,10 @@ public enum TeleprompterKitStrings {
 
 @available(iOS 14.0, macOS 11.0, *)
 public struct TeleprompterView: View {
+    @Environment(\.displayScale) private var displayScale
+
     private let text: String
-    private let ticker = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
+    private let ticker = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     @StateObject private var speechController = TeleprompterSpeechController()
     @State private var mode: TeleprompterScrollMode = .auto
@@ -63,6 +65,7 @@ public struct TeleprompterView: View {
                 let bottomInset = viewportHeight * 0.72
                 let contentHeight = topInset + max(textContentHeight, 1) + bottomInset
                 let maxOffset = max(contentHeight - viewportHeight, 1)
+                let scrollOffset = pixelAligned(-progress * maxOffset, scale: displayScale)
 
                 ZStack(alignment: .top) {
                     VStack(spacing: 0) {
@@ -85,7 +88,7 @@ public struct TeleprompterView: View {
                         Spacer().frame(height: bottomInset)
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .offset(y: -progress * maxOffset)
+                    .offset(y: scrollOffset)
                 }
                 .clipped()
                 .contentShape(Rectangle())
@@ -565,6 +568,11 @@ public struct TeleprompterView: View {
 
     private func clamped(_ value: CGFloat) -> CGFloat {
         min(max(value, 0), 1)
+    }
+
+    private func pixelAligned(_ value: CGFloat, scale: CGFloat) -> CGFloat {
+        let safeScale = max(scale, 1)
+        return (value * safeScale).rounded() / safeScale
     }
 
     private func persistProgress(force: Bool = false) {
