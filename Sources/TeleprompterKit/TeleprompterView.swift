@@ -30,7 +30,7 @@ public struct TeleprompterView: View {
     @State private var isMirrored = false
     @State private var isLooping = false
     @State private var isDarkMode = true
-    @State private var contentHeight: CGFloat = 1
+    @State private var textContentHeight: CGFloat = 1
     @State private var lastTick = Date()
     @State private var dragStartProgress: CGFloat?
     @State private var controlsHideTask: DispatchWorkItem?
@@ -46,11 +46,14 @@ public struct TeleprompterView: View {
             GeometryReader { proxy in
                 let viewportHeight = max(proxy.size.height, 1)
                 let targetWidth = min(proxy.size.width * readingWidth, 760)
+                let topInset = viewportHeight * 0.28
+                let bottomInset = viewportHeight * 0.72
+                let contentHeight = topInset + max(textContentHeight, 1) + bottomInset
                 let maxOffset = max(contentHeight - viewportHeight, 1)
 
                 ZStack(alignment: .top) {
                     VStack(spacing: 0) {
-                        Spacer().frame(height: viewportHeight * 0.28)
+                        Spacer().frame(height: topInset)
 
                         Text(displayText)
                             .font(.system(size: fontSize, weight: .semibold, design: .rounded))
@@ -58,16 +61,17 @@ public struct TeleprompterView: View {
                             .lineSpacing(lineSpacing)
                             .multilineTextAlignment(.leading)
                             .frame(width: targetWidth, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
                             .scaleEffect(x: isMirrored ? -1 : 1, y: 1, anchor: .center)
+                            .background(
+                                GeometryReader { reader in
+                                    Color.clear.preference(key: TeleprompterTextHeightKey.self, value: reader.size.height)
+                                }
+                            )
 
-                        Spacer().frame(height: viewportHeight * 0.72)
+                        Spacer().frame(height: bottomInset)
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .background(
-                        GeometryReader { reader in
-                            Color.clear.preference(key: TeleprompterContentHeightKey.self, value: reader.size.height)
-                        }
-                    )
                     .offset(y: -progress * maxOffset)
                 }
                 .clipped()
@@ -83,8 +87,8 @@ public struct TeleprompterView: View {
                     .transition(.opacity)
             }
         }
-        .onPreferenceChange(TeleprompterContentHeightKey.self) { height in
-            contentHeight = max(height, 1)
+        .onPreferenceChange(TeleprompterTextHeightKey.self) { height in
+            textContentHeight = max(height, 1)
         }
         .onReceive(ticker) { now in
             let delta = now.timeIntervalSince(lastTick)
@@ -120,7 +124,7 @@ public struct TeleprompterView: View {
     }
 
     private var panelColor: Color {
-        isDarkMode ? Color.black.opacity(0.72) : Color.white.opacity(0.9)
+        isDarkMode ? Color(red: 0.07, green: 0.075, blue: 0.085).opacity(0.84) : Color.white.opacity(0.88)
     }
 
     private var primaryTextColor: Color {
@@ -135,41 +139,35 @@ public struct TeleprompterView: View {
         Color(red: 0.98, green: 0.46, blue: 0.12)
     }
 
+    private var controlFillColor: Color {
+        isDarkMode ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
+    }
+
+    private var panelStrokeColor: Color {
+        isDarkMode ? Color.white.opacity(0.1) : Color.black.opacity(0.08)
+    }
+
     private var controlsOverlay: some View {
         VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Text(teleprompterLocalized("teleprompter"))
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(primaryTextColor)
-                    .lineLimit(1)
-
-                Spacer(minLength: 12)
-
-                statusChip
-            }
-            .padding(.horizontal, 18)
-            .padding(.top, 14)
-
             settingsPanel
+                .frame(maxWidth: 520)
+                .padding(.top, 114)
 
             Spacer(minLength: 12)
 
             playbackBar
+                .frame(maxWidth: 520)
         }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.horizontal, 14)
+        .padding(.bottom, 16)
     }
 
     private var settingsPanel: some View {
-        VStack(spacing: 12) {
-            Picker("", selection: $mode) {
-                ForEach(TeleprompterScrollMode.allCases) { mode in
-                    Text(teleprompterLocalized(mode.localizationKey)).tag(mode)
-                }
-            }
-            .pickerStyle(SegmentedPickerStyle())
+        VStack(spacing: 10) {
+            modeSelector
 
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 if mode == .timed {
                     sliderRow(
                         title: teleprompterLocalized("teleprompter_duration"),
@@ -215,7 +213,7 @@ public struct TeleprompterView: View {
                 )
             }
 
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 compactToggle(title: teleprompterLocalized("teleprompter_mirror"), isOn: $isMirrored, systemName: "rectangle.righthalf.inset.filled")
                 compactToggle(title: teleprompterLocalized("teleprompter_loop"), isOn: $isLooping, systemName: "repeat")
 
@@ -224,14 +222,46 @@ public struct TeleprompterView: View {
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(primaryTextColor)
                         .frame(width: 40, height: 34)
-                        .background(Capsule().fill(primaryTextColor.opacity(0.12)))
+                        .background(Capsule().fill(controlFillColor))
                 }
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(panelColor))
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(panelColor)
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(panelStrokeColor, lineWidth: 1))
+        )
         .shadow(color: Color.black.opacity(isDarkMode ? 0.34 : 0.12), radius: 20, x: 0, y: 8)
+    }
+
+    private var modeSelector: some View {
+        HStack(spacing: 4) {
+            ForEach(TeleprompterScrollMode.allCases) { option in
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.16)) {
+                        mode = option
+                    }
+                }) {
+                    Text(teleprompterLocalized(option.localizationKey))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(mode == option ? Color.white : primaryTextColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .padding(.horizontal, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                .fill(mode == option ? accentColor : Color.clear)
+                        )
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(4)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(controlFillColor))
     }
 
     private var playbackBar: some View {
@@ -257,28 +287,6 @@ public struct TeleprompterView: View {
         .padding(.vertical, 12)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(panelColor))
         .shadow(color: Color.black.opacity(isDarkMode ? 0.34 : 0.12), radius: 18, x: 0, y: 8)
-    }
-
-    private var statusChip: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(speechController.isListening ? Color.green : secondaryTextColor.opacity(0.45))
-                .frame(width: 7, height: 7)
-
-            Text(statusText)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(secondaryTextColor)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(Capsule().fill(primaryTextColor.opacity(0.1)))
-    }
-
-    private var statusText: String {
-        if mode != .auto { return teleprompterLocalized(mode.localizationKey) }
-        if speechController.authorizationDenied { return teleprompterLocalized("teleprompter_speech_unavailable") }
-        return teleprompterLocalized("teleprompter_auto")
     }
 
     private func sliderRow(
@@ -341,7 +349,7 @@ public struct TeleprompterView: View {
             .foregroundColor(isOn.wrappedValue ? Color.white : primaryTextColor)
             .padding(.horizontal, 10)
             .frame(height: 34)
-            .background(Capsule().fill(isOn.wrappedValue ? accentColor : primaryTextColor.opacity(0.12)))
+            .background(Capsule().fill(isOn.wrappedValue ? accentColor : controlFillColor))
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -352,7 +360,7 @@ public struct TeleprompterView: View {
                 .font(.system(size: 17, weight: .bold))
                 .foregroundColor(highlighted ? Color.white : primaryTextColor)
                 .frame(width: highlighted ? 50 : 42, height: highlighted ? 50 : 42)
-                .background(Circle().fill(highlighted ? accentColor : primaryTextColor.opacity(0.12)))
+                .background(Circle().fill(highlighted ? accentColor : controlFillColor))
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -644,7 +652,7 @@ private enum TeleprompterTextCounter {
     }
 }
 
-private struct TeleprompterContentHeightKey: PreferenceKey {
+private struct TeleprompterTextHeightKey: PreferenceKey {
     static var defaultValue: CGFloat = 1
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
