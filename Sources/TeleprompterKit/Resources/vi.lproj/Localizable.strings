@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Máy nhắc chữ";
+"teleprompter_empty" = "Nhập văn bản trước khi mở máy nhắc chữ.";
+"teleprompter_auto" = "Tự động";
+"teleprompter_timed" = "Theo thời gian";
+"teleprompter_wpm" = "Đơn vị/phút";
+"teleprompter_duration" = "Thời lượng";
+"teleprompter_minutes" = "phút";
+"teleprompter_units_per_minute" = "Đơn vị/phút";
+"teleprompter_font_size" = "Cỡ chữ";
+"teleprompter_line_spacing" = "Giãn dòng";
+"teleprompter_reading_width" = "Độ rộng đọc";
+"teleprompter_mirror" = "Gương";
+"teleprompter_loop" = "Lặp";
+"teleprompter_speech_unavailable" = "Không có giọng nói";

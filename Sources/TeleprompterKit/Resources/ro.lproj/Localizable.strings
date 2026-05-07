@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Introdu text înainte de a deschide teleprompterul.";
+"teleprompter_auto" = "Auto";
+"teleprompter_timed" = "Temporizat";
+"teleprompter_wpm" = "Unități/min";
+"teleprompter_duration" = "Durată";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Unități/min";
+"teleprompter_font_size" = "Dimensiune font";
+"teleprompter_line_spacing" = "Spațiere rânduri";
+"teleprompter_reading_width" = "Lățime citire";
+"teleprompter_mirror" = "Oglindă";
+"teleprompter_loop" = "Buclă";
+"teleprompter_speech_unavailable" = "Vorbirea nu este disponibilă";

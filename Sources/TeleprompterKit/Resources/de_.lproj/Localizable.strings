@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Gib Text ein, bevor du den Teleprompter öffnest.";
+"teleprompter_auto" = "Auto";
+"teleprompter_timed" = "Zeitgesteuert";
+"teleprompter_wpm" = "Einheiten/min";
+"teleprompter_duration" = "Dauer";
+"teleprompter_minutes" = "Min.";
+"teleprompter_units_per_minute" = "Einheiten/min";
+"teleprompter_font_size" = "Schriftgröße";
+"teleprompter_line_spacing" = "Zeilenabstand";
+"teleprompter_reading_width" = "Lesebreite";
+"teleprompter_mirror" = "Spiegeln";
+"teleprompter_loop" = "Schleife";
+"teleprompter_speech_unavailable" = "Sprache nicht verfügbar";

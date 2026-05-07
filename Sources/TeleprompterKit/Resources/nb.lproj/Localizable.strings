@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Skriv inn tekst før du åpner teleprompteren.";
+"teleprompter_auto" = "Auto";
+"teleprompter_timed" = "Tidsstyrt";
+"teleprompter_wpm" = "Enheter/min";
+"teleprompter_duration" = "Varighet";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Enheter/min";
+"teleprompter_font_size" = "Skriftstørrelse";
+"teleprompter_line_spacing" = "Linjeavstand";
+"teleprompter_reading_width" = "Lesebredde";
+"teleprompter_mirror" = "Speil";
+"teleprompter_loop" = "Gjenta";
+"teleprompter_speech_unavailable" = "Tale er ikke tilgjengelig";

@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Телесуфлер";
+"teleprompter_empty" = "Введите текст перед открытием телесуфлера.";
+"teleprompter_auto" = "Авто";
+"teleprompter_timed" = "По времени";
+"teleprompter_wpm" = "Ед./мин";
+"teleprompter_duration" = "Длительность";
+"teleprompter_minutes" = "мин";
+"teleprompter_units_per_minute" = "Ед./мин";
+"teleprompter_font_size" = "Размер шрифта";
+"teleprompter_line_spacing" = "Межстрочный интервал";
+"teleprompter_reading_width" = "Ширина чтения";
+"teleprompter_mirror" = "Зеркало";
+"teleprompter_loop" = "Повтор";
+"teleprompter_speech_unavailable" = "Речь недоступна";

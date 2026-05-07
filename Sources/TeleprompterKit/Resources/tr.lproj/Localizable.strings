@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Teleprompterı açmadan önce metin girin.";
+"teleprompter_auto" = "Otomatik";
+"teleprompter_timed" = "Zamanlı";
+"teleprompter_wpm" = "Birim/dk";
+"teleprompter_duration" = "Süre";
+"teleprompter_minutes" = "dk";
+"teleprompter_units_per_minute" = "Birim/dk";
+"teleprompter_font_size" = "Yazı boyutu";
+"teleprompter_line_spacing" = "Satır aralığı";
+"teleprompter_reading_width" = "Okuma genişliği";
+"teleprompter_mirror" = "Ayna";
+"teleprompter_loop" = "Döngü";
+"teleprompter_speech_unavailable" = "Konuşma kullanılamıyor";

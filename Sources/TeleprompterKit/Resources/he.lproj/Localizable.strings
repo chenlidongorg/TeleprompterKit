@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "טלפרומפטר";
+"teleprompter_empty" = "הזן טקסט לפני פתיחת הטלפרומפטר.";
+"teleprompter_auto" = "אוטומטי";
+"teleprompter_timed" = "מתוזמן";
+"teleprompter_wpm" = "יחידות/דקה";
+"teleprompter_duration" = "משך";
+"teleprompter_minutes" = "דק׳";
+"teleprompter_units_per_minute" = "יחידות/דקה";
+"teleprompter_font_size" = "גודל גופן";
+"teleprompter_line_spacing" = "ריווח שורות";
+"teleprompter_reading_width" = "רוחב קריאה";
+"teleprompter_mirror" = "מראה";
+"teleprompter_loop" = "לולאה";
+"teleprompter_speech_unavailable" = "הדיבור אינו זמין";

@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Indtast tekst, før du åbner teleprompteren.";
+"teleprompter_auto" = "Auto";
+"teleprompter_timed" = "Tidsstyret";
+"teleprompter_wpm" = "Enheder/min";
+"teleprompter_duration" = "Varighed";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Enheder/min";
+"teleprompter_font_size" = "Skriftstørrelse";
+"teleprompter_line_spacing" = "Linjeafstand";
+"teleprompter_reading_width" = "Læsebredde";
+"teleprompter_mirror" = "Spejl";
+"teleprompter_loop" = "Gentag";
+"teleprompter_speech_unavailable" = "Tale er ikke tilgængelig";

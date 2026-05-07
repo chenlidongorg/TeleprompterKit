@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "เทเลพรอมป์เตอร์";
+"teleprompter_empty" = "ป้อนข้อความก่อนเปิดเทเลพรอมป์เตอร์";
+"teleprompter_auto" = "อัตโนมัติ";
+"teleprompter_timed" = "ตามเวลา";
+"teleprompter_wpm" = "หน่วย/นาที";
+"teleprompter_duration" = "ระยะเวลา";
+"teleprompter_minutes" = "นาที";
+"teleprompter_units_per_minute" = "หน่วย/นาที";
+"teleprompter_font_size" = "ขนาดตัวอักษร";
+"teleprompter_line_spacing" = "ระยะบรรทัด";
+"teleprompter_reading_width" = "ความกว้างการอ่าน";
+"teleprompter_mirror" = "กระจก";
+"teleprompter_loop" = "วนซ้ำ";
+"teleprompter_speech_unavailable" = "ไม่สามารถใช้เสียงพูดได้";

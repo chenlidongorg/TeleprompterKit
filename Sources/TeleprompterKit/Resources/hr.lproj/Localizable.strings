@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Unesite tekst prije otvaranja telepromptera.";
+"teleprompter_auto" = "Automatski";
+"teleprompter_timed" = "Vremenski";
+"teleprompter_wpm" = "Jedinica/min";
+"teleprompter_duration" = "Trajanje";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Jedinica/min";
+"teleprompter_font_size" = "Veličina fonta";
+"teleprompter_line_spacing" = "Prored";
+"teleprompter_reading_width" = "Širina čitanja";
+"teleprompter_mirror" = "Zrcalo";
+"teleprompter_loop" = "Petlja";
+"teleprompter_speech_unavailable" = "Govor nije dostupan";

@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Телесуфлер";
+"teleprompter_empty" = "Введіть текст перед відкриттям телесуфлера.";
+"teleprompter_auto" = "Авто";
+"teleprompter_timed" = "За часом";
+"teleprompter_wpm" = "Од./хв";
+"teleprompter_duration" = "Тривалість";
+"teleprompter_minutes" = "хв";
+"teleprompter_units_per_minute" = "Од./хв";
+"teleprompter_font_size" = "Розмір шрифту";
+"teleprompter_line_spacing" = "Міжрядковий інтервал";
+"teleprompter_reading_width" = "Ширина читання";
+"teleprompter_mirror" = "Дзеркало";
+"teleprompter_loop" = "Повтор";
+"teleprompter_speech_unavailable" = "Мовлення недоступне";

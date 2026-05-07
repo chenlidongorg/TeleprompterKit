@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Masukkan teks sebelum membuka teleprompter.";
+"teleprompter_auto" = "Auto";
+"teleprompter_timed" = "Bermasa";
+"teleprompter_wpm" = "Unit/min";
+"teleprompter_duration" = "Tempoh";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Unit/min";
+"teleprompter_font_size" = "Saiz fon";
+"teleprompter_line_spacing" = "Jarak baris";
+"teleprompter_reading_width" = "Lebar bacaan";
+"teleprompter_mirror" = "Cermin";
+"teleprompter_loop" = "Gelung";
+"teleprompter_speech_unavailable" = "Pertuturan tidak tersedia";

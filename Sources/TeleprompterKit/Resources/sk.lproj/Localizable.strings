@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Pred otvorením telepromptera zadajte text.";
+"teleprompter_auto" = "Automaticky";
+"teleprompter_timed" = "Na čas";
+"teleprompter_wpm" = "Jednotiek/min";
+"teleprompter_duration" = "Trvanie";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Jednotiek/min";
+"teleprompter_font_size" = "Veľkosť písma";
+"teleprompter_line_spacing" = "Riadkovanie";
+"teleprompter_reading_width" = "Šírka čítania";
+"teleprompter_mirror" = "Zrkadlo";
+"teleprompter_loop" = "Slučka";
+"teleprompter_speech_unavailable" = "Reč nie je dostupná";

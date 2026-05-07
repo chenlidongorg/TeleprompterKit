@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Ange text innan du öppnar telepromptern.";
+"teleprompter_auto" = "Auto";
+"teleprompter_timed" = "Tidsstyrd";
+"teleprompter_wpm" = "Enheter/min";
+"teleprompter_duration" = "Varaktighet";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Enheter/min";
+"teleprompter_font_size" = "Textstorlek";
+"teleprompter_line_spacing" = "Radavstånd";
+"teleprompter_reading_width" = "Läsbredd";
+"teleprompter_mirror" = "Spegel";
+"teleprompter_loop" = "Loop";
+"teleprompter_speech_unavailable" = "Tal är inte tillgängligt";

@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Πληκτρολογήστε κείμενο πριν ανοίξετε το teleprompter.";
+"teleprompter_auto" = "Αυτόματο";
+"teleprompter_timed" = "Με χρόνο";
+"teleprompter_wpm" = "Μονάδες/λεπτό";
+"teleprompter_duration" = "Διάρκεια";
+"teleprompter_minutes" = "λεπ.";
+"teleprompter_units_per_minute" = "Μονάδες/λεπτό";
+"teleprompter_font_size" = "Μέγεθος γραμματοσειράς";
+"teleprompter_line_spacing" = "Διάστιχο";
+"teleprompter_reading_width" = "Πλάτος ανάγνωσης";
+"teleprompter_mirror" = "Καθρέφτης";
+"teleprompter_loop" = "Επανάληψη";
+"teleprompter_speech_unavailable" = "Η ομιλία δεν είναι διαθέσιμη";

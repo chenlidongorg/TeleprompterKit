@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "直播或演讲提词器";
+"teleprompter_empty" = "请先输入提词内容。";
+"teleprompter_auto" = "自动";
+"teleprompter_timed" = "定时";
+"teleprompter_wpm" = "每分钟字/词";
+"teleprompter_duration" = "时长";
+"teleprompter_minutes" = "分钟";
+"teleprompter_units_per_minute" = "每分钟字/词";
+"teleprompter_font_size" = "字号";
+"teleprompter_line_spacing" = "行距";
+"teleprompter_reading_width" = "阅读宽度";
+"teleprompter_mirror" = "镜像";
+"teleprompter_loop" = "循环";
+"teleprompter_speech_unavailable" = "语音不可用";

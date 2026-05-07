@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "المُلقّن";
+"teleprompter_empty" = "أدخل النص قبل فتح المُلقّن.";
+"teleprompter_auto" = "تلقائي";
+"teleprompter_timed" = "مؤقت";
+"teleprompter_wpm" = "وحدات/دقيقة";
+"teleprompter_duration" = "المدة";
+"teleprompter_minutes" = "دقيقة";
+"teleprompter_units_per_minute" = "وحدات/دقيقة";
+"teleprompter_font_size" = "حجم الخط";
+"teleprompter_line_spacing" = "تباعد الأسطر";
+"teleprompter_reading_width" = "عرض القراءة";
+"teleprompter_mirror" = "مرآة";
+"teleprompter_loop" = "تكرار";
+"teleprompter_speech_unavailable" = "الكلام غير متاح";

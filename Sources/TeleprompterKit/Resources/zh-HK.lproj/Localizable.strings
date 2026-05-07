@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "直播或演講提詞器";
+"teleprompter_empty" = "請先輸入提詞內容。";
+"teleprompter_auto" = "自動";
+"teleprompter_timed" = "定時";
+"teleprompter_wpm" = "每分鐘字/詞";
+"teleprompter_duration" = "時長";
+"teleprompter_minutes" = "分鐘";
+"teleprompter_units_per_minute" = "每分鐘字/詞";
+"teleprompter_font_size" = "字號";
+"teleprompter_line_spacing" = "行距";
+"teleprompter_reading_width" = "閱讀寬度";
+"teleprompter_mirror" = "鏡像";
+"teleprompter_loop" = "循環";
+"teleprompter_speech_unavailable" = "語音無法使用";

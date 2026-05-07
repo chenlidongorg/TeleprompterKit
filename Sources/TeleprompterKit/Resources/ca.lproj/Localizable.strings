@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleapuntador";
+"teleprompter_empty" = "Introdueix text abans d’obrir el teleapuntador.";
+"teleprompter_auto" = "Automàtic";
+"teleprompter_timed" = "Temporitzat";
+"teleprompter_wpm" = "Unitats/min";
+"teleprompter_duration" = "Durada";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Unitats/min";
+"teleprompter_font_size" = "Mida de lletra";
+"teleprompter_line_spacing" = "Interlineat";
+"teleprompter_reading_width" = "Amplada de lectura";
+"teleprompter_mirror" = "Mirall";
+"teleprompter_loop" = "Bucle";
+"teleprompter_speech_unavailable" = "Veu no disponible";

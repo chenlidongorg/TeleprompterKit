@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "텔레프롬프터";
+"teleprompter_empty" = "텔레프롬프터를 열기 전에 텍스트를 입력하세요.";
+"teleprompter_auto" = "자동";
+"teleprompter_timed" = "시간 지정";
+"teleprompter_wpm" = "단위/분";
+"teleprompter_duration" = "시간";
+"teleprompter_minutes" = "분";
+"teleprompter_units_per_minute" = "단위/분";
+"teleprompter_font_size" = "글자 크기";
+"teleprompter_line_spacing" = "줄 간격";
+"teleprompter_reading_width" = "읽기 폭";
+"teleprompter_mirror" = "미러";
+"teleprompter_loop" = "반복";
+"teleprompter_speech_unavailable" = "음성을 사용할 수 없음";

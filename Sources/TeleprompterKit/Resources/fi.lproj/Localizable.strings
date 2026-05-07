@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompteri";
+"teleprompter_empty" = "Syötä teksti ennen teleprompterin avaamista.";
+"teleprompter_auto" = "Automaattinen";
+"teleprompter_timed" = "Ajastettu";
+"teleprompter_wpm" = "Yksikköä/min";
+"teleprompter_duration" = "Kesto";
+"teleprompter_minutes" = "min";
+"teleprompter_units_per_minute" = "Yksikköä/min";
+"teleprompter_font_size" = "Fonttikoko";
+"teleprompter_line_spacing" = "Riviväli";
+"teleprompter_reading_width" = "Lukuleveys";
+"teleprompter_mirror" = "Peilaa";
+"teleprompter_loop" = "Silmukka";
+"teleprompter_speech_unavailable" = "Puhe ei ole käytettävissä";

@@ -1,0 +1,15 @@
+/* TeleprompterKit */
+"teleprompter" = "Teleprompter";
+"teleprompter_empty" = "Írj be szöveget a teleprompter megnyitása előtt.";
+"teleprompter_auto" = "Automatikus";
+"teleprompter_timed" = "Időzített";
+"teleprompter_wpm" = "Egység/perc";
+"teleprompter_duration" = "Időtartam";
+"teleprompter_minutes" = "perc";
+"teleprompter_units_per_minute" = "Egység/perc";
+"teleprompter_font_size" = "Betűméret";
+"teleprompter_line_spacing" = "Sorköz";
+"teleprompter_reading_width" = "Olvasási szélesség";
+"teleprompter_mirror" = "Tükrözés";
+"teleprompter_loop" = "Ismétlés";
+"teleprompter_speech_unavailable" = "A beszéd nem érhető el";
