@@ -208,7 +208,7 @@ public struct TeleprompterView: View {
                         title: teleprompterLocalized("teleprompter_duration"),
                         valueText: "\(Int(durationMinutes)) \(teleprompterLocalized("teleprompter_minutes"))",
                         value: $durationMinutes,
-                        range: 1...60,
+                        range: 1...180,
                         step: 1
                     )
                 }
@@ -538,7 +538,7 @@ private struct TeleprompterDefaults {
         let unitsPerMinute = TeleprompterTextCounter.defaultUnitsPerMinute(in: text)
         let units = max(TeleprompterTextCounter.countUnits(in: text), 1)
         let estimatedMinutes = Double(units) / max(unitsPerMinute, 1)
-        let durationMinutes = min(max(ceil(estimatedMinutes), 1), 60)
+        let durationMinutes = min(max(ceil(estimatedMinutes), 1), 180)
 
         return TeleprompterDefaults(
             fontSize: 44,
