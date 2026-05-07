@@ -32,17 +32,24 @@ public struct TeleprompterView: View {
     @State private var isDarkMode = true
     @State private var textContentHeight: CGFloat = 1
     @State private var lastTick = Date()
+    @State private var lastProgressPersistAt = Date.distantPast
     @State private var dragStartProgress: CGFloat?
     @State private var controlsHideTask: DispatchWorkItem?
 
     public init(text: String) {
         self.text = text
         let defaults = TeleprompterDefaults.make(for: text)
-        _fontSize = State(initialValue: defaults.fontSize)
-        _lineSpacing = State(initialValue: defaults.lineSpacing)
-        _readingWidth = State(initialValue: defaults.readingWidth)
-        _durationMinutes = State(initialValue: defaults.durationMinutes)
-        _unitsPerMinute = State(initialValue: defaults.unitsPerMinute)
+        let settings = TeleprompterSettingsStore.load(defaults: defaults)
+        _mode = State(initialValue: settings.mode)
+        _fontSize = State(initialValue: settings.fontSize)
+        _lineSpacing = State(initialValue: settings.lineSpacing)
+        _readingWidth = State(initialValue: settings.readingWidth)
+        _durationMinutes = State(initialValue: settings.durationMinutes)
+        _unitsPerMinute = State(initialValue: settings.unitsPerMinute)
+        _isMirrored = State(initialValue: settings.isMirrored)
+        _isLooping = State(initialValue: settings.isLooping)
+        _isDarkMode = State(initialValue: settings.isDarkMode)
+        _progress = State(initialValue: TeleprompterProgressStore.load(for: text))
     }
 
     public var body: some View {
@@ -108,6 +115,7 @@ public struct TeleprompterView: View {
             advance(delta: max(0, min(delta, 0.2)))
         }
         .onChange(of: mode) { newMode in
+            persistSettings()
             if isPlaying {
                 speechController.stop()
                 if newMode == .auto {
@@ -115,8 +123,17 @@ public struct TeleprompterView: View {
                 }
             }
         }
+        .onChange(of: fontSize) { _ in persistSettings() }
+        .onChange(of: lineSpacing) { _ in persistSettings() }
+        .onChange(of: readingWidth) { _ in persistSettings() }
+        .onChange(of: durationMinutes) { _ in persistSettings() }
+        .onChange(of: unitsPerMinute) { _ in persistSettings() }
+        .onChange(of: isMirrored) { _ in persistSettings() }
+        .onChange(of: isLooping) { _ in persistSettings() }
+        .onChange(of: isDarkMode) { _ in persistSettings() }
         .onDisappear {
             controlsHideTask?.cancel()
+            persistProgress(force: true)
             speechController.stop()
         }
     }
@@ -254,6 +271,15 @@ public struct TeleprompterView: View {
 
                 Button(action: { isDarkMode.toggle() }) {
                     Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(primaryTextColor)
+                        .frame(width: 40, height: 34)
+                        .background(Capsule().fill(controlFillColor))
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                Button(action: restoreDefaultSettings) {
+                    Image(systemName: "arrow.counterclockwise")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(primaryTextColor)
                         .frame(width: 40, height: 34)
@@ -412,6 +438,7 @@ public struct TeleprompterView: View {
             }
             .onEnded { _ in
                 dragStartProgress = nil
+                persistProgress(force: true)
                 scheduleControlHideIfNeeded()
             }
     }
@@ -436,6 +463,7 @@ public struct TeleprompterView: View {
         isPlaying = false
         speechController.stop()
         controlsHideTask?.cancel()
+        persistProgress(force: true)
         if showPanel {
             withAnimation(.easeInOut(duration: 0.18)) {
                 showControls = true
@@ -449,6 +477,37 @@ public struct TeleprompterView: View {
         withAnimation(.easeOut(duration: 0.2)) {
             progress = 0
         }
+        persistProgress(force: true)
+    }
+
+    private func restoreDefaultSettings() {
+        let defaults = TeleprompterDefaults.make(for: text)
+        mode = defaults.mode
+        fontSize = defaults.fontSize
+        lineSpacing = defaults.lineSpacing
+        readingWidth = defaults.readingWidth
+        durationMinutes = defaults.durationMinutes
+        unitsPerMinute = defaults.unitsPerMinute
+        isMirrored = defaults.isMirrored
+        isLooping = defaults.isLooping
+        isDarkMode = defaults.isDarkMode
+        TeleprompterSettingsStore.save(defaults)
+    }
+
+    private func persistSettings() {
+        TeleprompterSettingsStore.save(
+            TeleprompterSettings(
+                mode: mode,
+                fontSize: fontSize,
+                lineSpacing: lineSpacing,
+                readingWidth: readingWidth,
+                durationMinutes: durationMinutes,
+                unitsPerMinute: unitsPerMinute,
+                isMirrored: isMirrored,
+                isLooping: isLooping,
+                isDarkMode: isDarkMode
+            )
+        )
     }
 
     private func advance(delta: TimeInterval) {
@@ -473,12 +532,15 @@ public struct TeleprompterView: View {
             if isLooping {
                 progress = 0
                 speechController.reset()
+                persistProgress(force: true)
             } else {
                 progress = 1
+                persistProgress(force: true)
                 pausePlayback(showPanel: true)
             }
         } else {
             progress = clamped(next)
+            persistProgress()
         }
     }
 
@@ -509,6 +571,13 @@ public struct TeleprompterView: View {
     private func clamped(_ value: CGFloat) -> CGFloat {
         min(max(value, 0), 1)
     }
+
+    private func persistProgress(force: Bool = false) {
+        let now = Date()
+        guard force || now.timeIntervalSince(lastProgressPersistAt) >= 0.8 else { return }
+        lastProgressPersistAt = now
+        TeleprompterProgressStore.save(progress, for: text)
+    }
 }
 
 private enum TeleprompterScrollMode: String, CaseIterable, Identifiable {
@@ -528,11 +597,15 @@ private enum TeleprompterScrollMode: String, CaseIterable, Identifiable {
 }
 
 private struct TeleprompterDefaults {
+    let mode: TeleprompterScrollMode
     let fontSize: CGFloat
     let lineSpacing: CGFloat
     let readingWidth: CGFloat
     let durationMinutes: Double
     let unitsPerMinute: Double
+    let isMirrored: Bool
+    let isLooping: Bool
+    let isDarkMode: Bool
 
     static func make(for text: String) -> TeleprompterDefaults {
         let unitsPerMinute = TeleprompterTextCounter.defaultUnitsPerMinute(in: text)
@@ -541,12 +614,139 @@ private struct TeleprompterDefaults {
         let durationMinutes = min(max(ceil(estimatedMinutes), 1), 180)
 
         return TeleprompterDefaults(
+            mode: .auto,
             fontSize: 44,
             lineSpacing: 16,
             readingWidth: 0.62,
             durationMinutes: durationMinutes,
-            unitsPerMinute: unitsPerMinute
+            unitsPerMinute: unitsPerMinute,
+            isMirrored: false,
+            isLooping: false,
+            isDarkMode: true
         )
+    }
+}
+
+private struct TeleprompterSettings {
+    let mode: TeleprompterScrollMode
+    let fontSize: CGFloat
+    let lineSpacing: CGFloat
+    let readingWidth: CGFloat
+    let durationMinutes: Double
+    let unitsPerMinute: Double
+    let isMirrored: Bool
+    let isLooping: Bool
+    let isDarkMode: Bool
+}
+
+private enum TeleprompterSettingsStore {
+    private static let prefix = "TeleprompterKit.TeleprompterView.settings.v1."
+
+    private enum Key {
+        static let mode = prefix + "mode"
+        static let fontSize = prefix + "fontSize"
+        static let lineSpacing = prefix + "lineSpacing"
+        static let readingWidth = prefix + "readingWidth"
+        static let durationMinutes = prefix + "durationMinutes"
+        static let unitsPerMinute = prefix + "unitsPerMinute"
+        static let isMirrored = prefix + "isMirrored"
+        static let isLooping = prefix + "isLooping"
+        static let isDarkMode = prefix + "isDarkMode"
+    }
+
+    static func load(defaults: TeleprompterDefaults) -> TeleprompterSettings {
+        let userDefaults = UserDefaults.standard
+        return TeleprompterSettings(
+            mode: storedMode(for: Key.mode, defaults: defaults.mode, in: userDefaults),
+            fontSize: CGFloat(storedDouble(for: Key.fontSize, defaults: Double(defaults.fontSize), range: 26...86, in: userDefaults)),
+            lineSpacing: CGFloat(storedDouble(for: Key.lineSpacing, defaults: Double(defaults.lineSpacing), range: 4...32, in: userDefaults)),
+            readingWidth: CGFloat(storedDouble(for: Key.readingWidth, defaults: Double(defaults.readingWidth), range: 0.45...0.9, in: userDefaults)),
+            durationMinutes: storedDouble(for: Key.durationMinutes, defaults: defaults.durationMinutes, range: 1...180, in: userDefaults),
+            unitsPerMinute: storedDouble(for: Key.unitsPerMinute, defaults: defaults.unitsPerMinute, range: 60...420, in: userDefaults),
+            isMirrored: storedBool(for: Key.isMirrored, defaults: defaults.isMirrored, in: userDefaults),
+            isLooping: storedBool(for: Key.isLooping, defaults: defaults.isLooping, in: userDefaults),
+            isDarkMode: storedBool(for: Key.isDarkMode, defaults: defaults.isDarkMode, in: userDefaults)
+        )
+    }
+
+    static func save(_ settings: TeleprompterSettings) {
+        let userDefaults = UserDefaults.standard
+        userDefaults.set(settings.mode.rawValue, forKey: Key.mode)
+        userDefaults.set(Double(settings.fontSize), forKey: Key.fontSize)
+        userDefaults.set(Double(settings.lineSpacing), forKey: Key.lineSpacing)
+        userDefaults.set(Double(settings.readingWidth), forKey: Key.readingWidth)
+        userDefaults.set(settings.durationMinutes, forKey: Key.durationMinutes)
+        userDefaults.set(settings.unitsPerMinute, forKey: Key.unitsPerMinute)
+        userDefaults.set(settings.isMirrored, forKey: Key.isMirrored)
+        userDefaults.set(settings.isLooping, forKey: Key.isLooping)
+        userDefaults.set(settings.isDarkMode, forKey: Key.isDarkMode)
+    }
+
+    static func save(_ defaults: TeleprompterDefaults) {
+        save(
+            TeleprompterSettings(
+                mode: defaults.mode,
+                fontSize: defaults.fontSize,
+                lineSpacing: defaults.lineSpacing,
+                readingWidth: defaults.readingWidth,
+                durationMinutes: defaults.durationMinutes,
+                unitsPerMinute: defaults.unitsPerMinute,
+                isMirrored: defaults.isMirrored,
+                isLooping: defaults.isLooping,
+                isDarkMode: defaults.isDarkMode
+            )
+        )
+    }
+
+    private static func storedMode(for key: String, defaults: TeleprompterScrollMode, in userDefaults: UserDefaults) -> TeleprompterScrollMode {
+        guard let rawValue = userDefaults.string(forKey: key) else { return defaults }
+        return TeleprompterScrollMode(rawValue: rawValue) ?? defaults
+    }
+
+    private static func storedDouble(
+        for key: String,
+        defaults: Double,
+        range: ClosedRange<Double>,
+        in userDefaults: UserDefaults
+    ) -> Double {
+        guard userDefaults.object(forKey: key) != nil else { return defaults }
+        return min(max(userDefaults.double(forKey: key), range.lowerBound), range.upperBound)
+    }
+
+    private static func storedBool(for key: String, defaults: Bool, in userDefaults: UserDefaults) -> Bool {
+        guard userDefaults.object(forKey: key) != nil else { return defaults }
+        return userDefaults.bool(forKey: key)
+    }
+}
+
+private enum TeleprompterProgressStore {
+    private static let prefix = "TeleprompterKit.TeleprompterView.progress.v1."
+    private static let textFingerprintKey = prefix + "textFingerprint"
+    private static let progressKey = prefix + "value"
+
+    static func load(for text: String) -> CGFloat {
+        let userDefaults = UserDefaults.standard
+        guard userDefaults.string(forKey: textFingerprintKey) == fingerprint(for: text),
+              userDefaults.object(forKey: progressKey) != nil else {
+            return 0
+        }
+        return CGFloat(min(max(userDefaults.double(forKey: progressKey), 0), 1))
+    }
+
+    static func save(_ progress: CGFloat, for text: String) {
+        let userDefaults = UserDefaults.standard
+        userDefaults.set(fingerprint(for: text), forKey: textFingerprintKey)
+        userDefaults.set(Double(min(max(progress, 0), 1)), forKey: progressKey)
+    }
+
+    private static func fingerprint(for text: String) -> String {
+        let normalizedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var hash: UInt64 = 14_695_981_039_346_656_037
+        for byte in normalizedText.utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 1_099_511_628_211
+        }
+        return "\(normalizedText.utf8.count)-\(String(hash, radix: 16))"
     }
 }
 
@@ -556,14 +756,18 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
     @Published var spokenUnitCount = 0
     @Published var audioLevel: Float = 0
     @Published var lastVoiceActivityAt: Date = .distantPast
+    @Published var lastRecognizedSpeechAt: Date = .distantPast
 
     private var audioEngine: AVAudioEngine?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private var speechRecognizer: SFSpeechRecognizer?
+    private var noiseFloor: Float = 0.012
+    private var smoothedAudioLevel: Float = 0
+    private var voiceGateFrameCount = 0
 
     var isActivelySpeaking: Bool {
-        audioLevel > 0.035
+        Date().timeIntervalSince(lastVoiceActivityAt) < 0.8
     }
 
     var autoScrollMultiplier: CGFloat {
@@ -575,14 +779,19 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
             return spokenUnitCount > 0 ? 0.18 : 0.1
         }
 
-        let silenceDuration = Date().timeIntervalSince(lastVoiceActivityAt)
-        if silenceDuration < 0.65 {
+        let now = Date()
+        let speechSilenceDuration = now.timeIntervalSince(lastRecognizedSpeechAt)
+        let cleanAudioSilenceDuration = now.timeIntervalSince(lastVoiceActivityAt)
+        if speechSilenceDuration < 1.2 && cleanAudioSilenceDuration < 0.8 {
             return 1.06
         }
-        if silenceDuration < 1.5 {
+        if speechSilenceDuration < 2.2 {
             return 0.55
         }
-        if silenceDuration < 3.2 {
+        if cleanAudioSilenceDuration < 0.8 && spokenUnitCount == 0 {
+            return 0.18
+        }
+        if speechSilenceDuration < 3.6 {
             return 0.18
         }
         return 0.04
@@ -628,11 +837,18 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
         audioEngine = nil
         isListening = false
         audioLevel = 0
+        smoothedAudioLevel = 0
+        voiceGateFrameCount = 0
+#if os(iOS)
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+#endif
     }
 
     func reset() {
         spokenUnitCount = 0
         lastVoiceActivityAt = .distantPast
+        lastRecognizedSpeechAt = .distantPast
+        voiceGateFrameCount = 0
     }
 
     private func beginRecognition() {
@@ -648,15 +864,21 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
         let engine = AVAudioEngine()
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
+        request.taskHint = .dictation
 
         do {
 #if os(iOS)
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.record, mode: .measurement, options: [.duckOthers])
+            try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.duckOthers, .allowBluetooth])
             try session.setActive(true, options: .notifyOthersOnDeactivation)
 #endif
 
             let inputNode = engine.inputNode
+#if os(iOS)
+            if #available(iOS 13.0, *) {
+                try? inputNode.setVoiceProcessingEnabled(true)
+            }
+#endif
             let format = inputNode.outputFormat(forBus: 0)
             inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
                 request.append(buffer)
@@ -676,7 +898,11 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
                 if let result = result {
                     let count = TeleprompterTextCounter.countUnits(in: result.bestTranscription.formattedString)
                     DispatchQueue.main.async {
-                        self.spokenUnitCount = max(self.spokenUnitCount, count)
+                        if count > self.spokenUnitCount {
+                            self.spokenUnitCount = count
+                            self.lastRecognizedSpeechAt = Date()
+                            self.lastVoiceActivityAt = Date()
+                        }
                     }
                 }
                 if error != nil || result?.isFinal == true {
@@ -704,10 +930,36 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
         let rms = sqrt(total / Float(frameLength))
         let normalized = min(max(rms * 18, 0), 1)
         DispatchQueue.main.async {
-            self.audioLevel = normalized
-            if normalized > 0.035 {
-                self.lastVoiceActivityAt = Date()
-            }
+            self.applyAudioLevel(normalized)
+        }
+    }
+
+    private func applyAudioLevel(_ rawLevel: Float) {
+        let now = Date()
+        smoothedAudioLevel = smoothedAudioLevel * 0.82 + rawLevel * 0.18
+
+        let recognitionIsRecent = now.timeIntervalSince(lastRecognizedSpeechAt) < 2.2
+        let gateThreshold = max(noiseFloor * 2.6 + 0.012, 0.045)
+        let isOverGate = smoothedAudioLevel > gateThreshold && rawLevel > gateThreshold * 0.85
+
+        if isOverGate {
+            voiceGateFrameCount = min(voiceGateFrameCount + 1, 12)
+        } else {
+            voiceGateFrameCount = max(voiceGateFrameCount - 2, 0)
+        }
+
+        if !isOverGate {
+            noiseFloor = min(max(noiseFloor * 0.96 + rawLevel * 0.04, 0.006), 0.18)
+        } else if !recognitionIsRecent {
+            noiseFloor = min(max(noiseFloor * 0.995 + rawLevel * 0.005, 0.006), 0.22)
+        }
+
+        audioLevel = smoothedAudioLevel
+
+        let hasStableCleanAudio = voiceGateFrameCount >= 3
+        let initialSpeechCandidate = spokenUnitCount == 0 && rawLevel > max(noiseFloor * 3.4 + 0.02, 0.075)
+        if hasStableCleanAudio && (recognitionIsRecent || initialSpeechCandidate) {
+            lastVoiceActivityAt = now
         }
     }
 }
