@@ -22,11 +22,11 @@ public struct TeleprompterView: View {
     @State private var isPlaying = false
     @State private var showControls = true
     @State private var progress: CGFloat = 0
-    @State private var fontSize: CGFloat = 42
-    @State private var lineSpacing: CGFloat = 14
-    @State private var readingWidth: CGFloat = 0.68
-    @State private var durationMinutes: Double = 3
-    @State private var unitsPerMinute: Double = 150
+    @State private var fontSize: CGFloat
+    @State private var lineSpacing: CGFloat
+    @State private var readingWidth: CGFloat
+    @State private var durationMinutes: Double
+    @State private var unitsPerMinute: Double
     @State private var isMirrored = false
     @State private var isLooping = false
     @State private var isDarkMode = true
@@ -37,6 +37,12 @@ public struct TeleprompterView: View {
 
     public init(text: String) {
         self.text = text
+        let defaults = TeleprompterDefaults.make(for: text)
+        _fontSize = State(initialValue: defaults.fontSize)
+        _lineSpacing = State(initialValue: defaults.lineSpacing)
+        _readingWidth = State(initialValue: defaults.readingWidth)
+        _durationMinutes = State(initialValue: defaults.durationMinutes)
+        _unitsPerMinute = State(initialValue: defaults.unitsPerMinute)
     }
 
     public var body: some View {
@@ -84,6 +90,11 @@ public struct TeleprompterView: View {
 
             if showControls {
                 controlsOverlay
+                    .transition(.opacity)
+            }
+
+            if isPlaying && !showControls {
+                passivePlaybackProgress
                     .transition(.opacity)
             }
         }
@@ -161,6 +172,30 @@ public struct TeleprompterView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.horizontal, 14)
         .padding(.bottom, 16)
+    }
+
+    private var passivePlaybackProgress: some View {
+        VStack {
+            Spacer()
+
+            GeometryReader { proxy in
+                let width = max(proxy.size.width * progress, 2)
+                let lineColor = isDarkMode ? Color.white : Color.black
+
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(lineColor.opacity(0.12))
+
+                    Capsule()
+                        .fill(lineColor.opacity(0.34))
+                        .frame(width: width)
+                }
+            }
+            .frame(height: 3)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 18)
+        }
+        .allowsHitTesting(false)
     }
 
     private var settingsPanel: some View {
@@ -388,10 +423,13 @@ public struct TeleprompterView: View {
     private func startPlayback() {
         lastTick = Date()
         isPlaying = true
+        controlsHideTask?.cancel()
         if mode == .auto {
             speechController.start()
         }
-        scheduleControlHideIfNeeded()
+        withAnimation(.easeInOut(duration: 0.18)) {
+            showControls = false
+        }
     }
 
     private func pausePlayback(showPanel: Bool) {
@@ -420,10 +458,10 @@ public struct TeleprompterView: View {
         switch mode {
         case .auto:
             let speechProgress = CGFloat(speechController.spokenUnitCount) / total
-            let speakingMultiplier: CGFloat = speechController.isActivelySpeaking || speechController.spokenUnitCount > 0 ? 1 : 0.18
+            let speakingMultiplier = speechController.autoScrollMultiplier
             next += CGFloat(delta) * CGFloat(unitsPerMinute / 60.0) / total * speakingMultiplier
             if speechProgress > next {
-                next = min(speechProgress, next + CGFloat(delta) * 0.22)
+                next = min(speechProgress, next + max(CGFloat(delta) * 0.18, CGFloat(delta) * CGFloat(unitsPerMinute / 60.0) / total * 2.5))
             }
         case .timed:
             next += CGFloat(delta / max(durationMinutes * 60, 1))
@@ -445,6 +483,11 @@ public struct TeleprompterView: View {
     }
 
     private func revealControls() {
+        if isPlaying {
+            pausePlayback(showPanel: true)
+            return
+        }
+
         withAnimation(.easeInOut(duration: 0.18)) {
             showControls = true
         }
@@ -484,11 +527,35 @@ private enum TeleprompterScrollMode: String, CaseIterable, Identifiable {
     }
 }
 
+private struct TeleprompterDefaults {
+    let fontSize: CGFloat
+    let lineSpacing: CGFloat
+    let readingWidth: CGFloat
+    let durationMinutes: Double
+    let unitsPerMinute: Double
+
+    static func make(for text: String) -> TeleprompterDefaults {
+        let unitsPerMinute = TeleprompterTextCounter.defaultUnitsPerMinute(in: text)
+        let units = max(TeleprompterTextCounter.countUnits(in: text), 1)
+        let estimatedMinutes = Double(units) / max(unitsPerMinute, 1)
+        let durationMinutes = min(max(ceil(estimatedMinutes), 1), 60)
+
+        return TeleprompterDefaults(
+            fontSize: 44,
+            lineSpacing: 16,
+            readingWidth: 0.62,
+            durationMinutes: durationMinutes,
+            unitsPerMinute: unitsPerMinute
+        )
+    }
+}
+
 private final class TeleprompterSpeechController: NSObject, ObservableObject {
     @Published var isListening = false
     @Published var authorizationDenied = false
     @Published var spokenUnitCount = 0
     @Published var audioLevel: Float = 0
+    @Published var lastVoiceActivityAt: Date = .distantPast
 
     private var audioEngine: AVAudioEngine?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -497,6 +564,28 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
 
     var isActivelySpeaking: Bool {
         audioLevel > 0.035
+    }
+
+    var autoScrollMultiplier: CGFloat {
+        if authorizationDenied {
+            return 0.82
+        }
+
+        guard isListening else {
+            return spokenUnitCount > 0 ? 0.18 : 0.1
+        }
+
+        let silenceDuration = Date().timeIntervalSince(lastVoiceActivityAt)
+        if silenceDuration < 0.65 {
+            return 1.06
+        }
+        if silenceDuration < 1.5 {
+            return 0.55
+        }
+        if silenceDuration < 3.2 {
+            return 0.18
+        }
+        return 0.04
     }
 
     func start() {
@@ -543,6 +632,7 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
 
     func reset() {
         spokenUnitCount = 0
+        lastVoiceActivityAt = .distantPast
     }
 
     private func beginRecognition() {
@@ -615,11 +705,19 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
         let normalized = min(max(rms * 18, 0), 1)
         DispatchQueue.main.async {
             self.audioLevel = normalized
+            if normalized > 0.035 {
+                self.lastVoiceActivityAt = Date()
+            }
         }
     }
 }
 
 private enum TeleprompterTextCounter {
+    private enum CountingStyle {
+        case character
+        case word
+    }
+
     static func countUnits(in text: String) -> Int {
         let cjkCount = text.unicodeScalars.filter { scalar in
             isCJK(scalar.value) || isKana(scalar.value) || isHangul(scalar.value)
@@ -630,13 +728,37 @@ private enum TeleprompterTextCounter {
         }.count
 
         if cjkCount > 0 {
-            return max(cjkCount, meaningfulScalarCount)
+            let nonCJKWordCount = text
+                .components(separatedBy: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
+                .filter { token in
+                    token.unicodeScalars.contains { scalar in
+                        !(isCJK(scalar.value) || isKana(scalar.value) || isHangul(scalar.value))
+                    }
+                }
+                .count
+            return max(cjkCount + nonCJKWordCount, 1)
         }
 
         let words = text.split { character in
             character.isWhitespace || character.isNewline || character.unicodeScalars.allSatisfy { CharacterSet.punctuationCharacters.contains($0) }
         }
-        return max(words.count, meaningfulScalarCount)
+        return max(words.count, meaningfulScalarCount > 0 ? 1 : 0)
+    }
+
+    static func defaultUnitsPerMinute(in text: String) -> Double {
+        switch countingStyle(in: text) {
+        case .character:
+            return 220
+        case .word:
+            return 140
+        }
+    }
+
+    private static func countingStyle(in text: String) -> CountingStyle {
+        let cjkCount = text.unicodeScalars.filter { scalar in
+            isCJK(scalar.value) || isKana(scalar.value) || isHangul(scalar.value)
+        }.count
+        return cjkCount > 0 ? .character : .word
     }
 
     private static func isCJK(_ value: UInt32) -> Bool {
