@@ -30,7 +30,6 @@ public struct TeleprompterView: View {
     @State private var durationMinutes: Double
     @State private var unitsPerMinute: Double
     @State private var isMirrored = false
-    @State private var isLooping = false
     @State private var isDarkMode = true
     @State private var textContentHeight: CGFloat = 1
     @State private var lastTick = Date()
@@ -49,7 +48,6 @@ public struct TeleprompterView: View {
         _durationMinutes = State(initialValue: settings.durationMinutes)
         _unitsPerMinute = State(initialValue: settings.unitsPerMinute)
         _isMirrored = State(initialValue: settings.isMirrored)
-        _isLooping = State(initialValue: settings.isLooping)
         _isDarkMode = State(initialValue: settings.isDarkMode)
         _progress = State(initialValue: TeleprompterProgressStore.load(for: text))
     }
@@ -103,7 +101,7 @@ public struct TeleprompterView: View {
                     .transition(.opacity)
             }
 
-            if isPlaying && !showControls {
+            if !showControls && (isPlaying || isAtEnd) {
                 passivePlaybackProgress
                     .transition(.opacity)
             }
@@ -132,7 +130,6 @@ public struct TeleprompterView: View {
         .onChange(of: durationMinutes) { _ in persistSettings() }
         .onChange(of: unitsPerMinute) { _ in persistSettings() }
         .onChange(of: isMirrored) { _ in persistSettings() }
-        .onChange(of: isLooping) { _ in persistSettings() }
         .onChange(of: isDarkMode) { _ in persistSettings() }
         .onDisappear {
             controlsHideTask?.cancel()
@@ -170,6 +167,10 @@ public struct TeleprompterView: View {
         Color(red: 0.98, green: 0.46, blue: 0.12)
     }
 
+    private var isAtEnd: Bool {
+        progress >= 0.999
+    }
+
     private var controlFillColor: Color {
         isDarkMode ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
     }
@@ -201,13 +202,14 @@ public struct TeleprompterView: View {
             GeometryReader { proxy in
                 let width = max(proxy.size.width * progress, 2)
                 let lineColor = isDarkMode ? Color.white : Color.black
+                let fillColor = isAtEnd ? accentColor.opacity(0.9) : lineColor.opacity(0.34)
 
                 ZStack(alignment: .leading) {
                     Capsule()
                         .fill(lineColor.opacity(0.12))
 
                     Capsule()
-                        .fill(lineColor.opacity(0.34))
+                        .fill(fillColor)
                         .frame(width: width)
                 }
             }
@@ -270,7 +272,6 @@ public struct TeleprompterView: View {
 
             HStack(spacing: 10) {
                 compactToggle(title: teleprompterLocalized("teleprompter_mirror"), isOn: $isMirrored, systemName: "rectangle.righthalf.inset.filled")
-                compactToggle(title: teleprompterLocalized("teleprompter_loop"), isOn: $isLooping, systemName: "repeat")
 
                 Button(action: { isDarkMode.toggle() }) {
                     Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
@@ -492,7 +493,6 @@ public struct TeleprompterView: View {
         durationMinutes = defaults.durationMinutes
         unitsPerMinute = defaults.unitsPerMinute
         isMirrored = defaults.isMirrored
-        isLooping = defaults.isLooping
         isDarkMode = defaults.isDarkMode
         TeleprompterSettingsStore.save(defaults)
     }
@@ -507,7 +507,6 @@ public struct TeleprompterView: View {
                 durationMinutes: durationMinutes,
                 unitsPerMinute: unitsPerMinute,
                 isMirrored: isMirrored,
-                isLooping: isLooping,
                 isDarkMode: isDarkMode
             )
         )
@@ -527,15 +526,9 @@ public struct TeleprompterView: View {
         }
 
         if next >= 1 {
-            if isLooping {
-                progress = 0
-                speechController.reset()
-                persistProgress(force: true)
-            } else {
-                progress = 1
-                persistProgress(force: true)
-                pausePlayback(showPanel: true)
-            }
+            progress = 1
+            persistProgress(force: true)
+            pausePlayback(showPanel: false)
         } else {
             progress = clamped(next)
             persistProgress()
@@ -546,6 +539,14 @@ public struct TeleprompterView: View {
         if isPlaying {
             pausePlayback(showPanel: true)
             return
+        }
+
+        if isAtEnd {
+            speechController.reset()
+            withAnimation(.easeOut(duration: 0.2)) {
+                progress = 0
+            }
+            persistProgress(force: true)
         }
 
         withAnimation(.easeInOut(duration: 0.18)) {
@@ -607,7 +608,6 @@ private struct TeleprompterDefaults {
     let durationMinutes: Double
     let unitsPerMinute: Double
     let isMirrored: Bool
-    let isLooping: Bool
     let isDarkMode: Bool
 
     static func make(for text: String) -> TeleprompterDefaults {
@@ -624,7 +624,6 @@ private struct TeleprompterDefaults {
             durationMinutes: durationMinutes,
             unitsPerMinute: unitsPerMinute,
             isMirrored: false,
-            isLooping: false,
             isDarkMode: true
         )
     }
@@ -638,7 +637,6 @@ private struct TeleprompterSettings {
     let durationMinutes: Double
     let unitsPerMinute: Double
     let isMirrored: Bool
-    let isLooping: Bool
     let isDarkMode: Bool
 }
 
@@ -653,7 +651,6 @@ private enum TeleprompterSettingsStore {
         static let durationMinutes = prefix + "durationMinutes"
         static let unitsPerMinute = prefix + "unitsPerMinute"
         static let isMirrored = prefix + "isMirrored"
-        static let isLooping = prefix + "isLooping"
         static let isDarkMode = prefix + "isDarkMode"
     }
 
@@ -667,7 +664,6 @@ private enum TeleprompterSettingsStore {
             durationMinutes: storedDouble(for: Key.durationMinutes, defaults: defaults.durationMinutes, range: 1...180, in: userDefaults),
             unitsPerMinute: storedDouble(for: Key.unitsPerMinute, defaults: defaults.unitsPerMinute, range: 60...420, in: userDefaults),
             isMirrored: storedBool(for: Key.isMirrored, defaults: defaults.isMirrored, in: userDefaults),
-            isLooping: storedBool(for: Key.isLooping, defaults: defaults.isLooping, in: userDefaults),
             isDarkMode: storedBool(for: Key.isDarkMode, defaults: defaults.isDarkMode, in: userDefaults)
         )
     }
@@ -681,7 +677,6 @@ private enum TeleprompterSettingsStore {
         userDefaults.set(settings.durationMinutes, forKey: Key.durationMinutes)
         userDefaults.set(settings.unitsPerMinute, forKey: Key.unitsPerMinute)
         userDefaults.set(settings.isMirrored, forKey: Key.isMirrored)
-        userDefaults.set(settings.isLooping, forKey: Key.isLooping)
         userDefaults.set(settings.isDarkMode, forKey: Key.isDarkMode)
     }
 
@@ -695,7 +690,6 @@ private enum TeleprompterSettingsStore {
                 durationMinutes: defaults.durationMinutes,
                 unitsPerMinute: defaults.unitsPerMinute,
                 isMirrored: defaults.isMirrored,
-                isLooping: defaults.isLooping,
                 isDarkMode: defaults.isDarkMode
             )
         )
