@@ -516,12 +516,7 @@ public struct TeleprompterView: View {
 
         switch mode {
         case .auto:
-            let speechProgress = CGFloat(speechController.spokenUnitCount) / total
-            let speakingMultiplier = speechController.autoScrollMultiplier
-            next += CGFloat(delta) * CGFloat(unitsPerMinute / 60.0) / total * speakingMultiplier
-            if speechProgress > next {
-                next = min(speechProgress, next + max(CGFloat(delta) * 0.18, CGFloat(delta) * CGFloat(unitsPerMinute / 60.0) / total * 2.5))
-            }
+            next += CGFloat(delta) * CGFloat(unitsPerMinute / 60.0) / total * speechController.autoScrollMultiplier
         case .timed:
             next += CGFloat(delta / max(durationMinutes * 60, 1))
         case .unitsPerMinute:
@@ -772,29 +767,17 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
 
     var autoScrollMultiplier: CGFloat {
         if authorizationDenied {
-            return 0.82
+            return 1
         }
 
         guard isListening else {
-            return spokenUnitCount > 0 ? 0.18 : 0.1
+            return 1
         }
 
         let now = Date()
-        let speechSilenceDuration = now.timeIntervalSince(lastRecognizedSpeechAt)
-        let cleanAudioSilenceDuration = now.timeIntervalSince(lastVoiceActivityAt)
-        if speechSilenceDuration < 1.2 && cleanAudioSilenceDuration < 0.8 {
-            return 1.06
-        }
-        if speechSilenceDuration < 2.2 {
-            return 0.55
-        }
-        if cleanAudioSilenceDuration < 0.8 && spokenUnitCount == 0 {
-            return 0.18
-        }
-        if speechSilenceDuration < 3.6 {
-            return 0.18
-        }
-        return 0.04
+        let hasRecentRecognizedSpeech = now.timeIntervalSince(lastRecognizedSpeechAt) < 2.5
+        let hasRecentCleanVoice = now.timeIntervalSince(lastVoiceActivityAt) < 1.2
+        return (hasRecentRecognizedSpeech || hasRecentCleanVoice) ? 1 : 0.7
     }
 
     func start() {
@@ -957,8 +940,7 @@ private final class TeleprompterSpeechController: NSObject, ObservableObject {
         audioLevel = smoothedAudioLevel
 
         let hasStableCleanAudio = voiceGateFrameCount >= 3
-        let initialSpeechCandidate = spokenUnitCount == 0 && rawLevel > max(noiseFloor * 3.4 + 0.02, 0.075)
-        if hasStableCleanAudio && (recognitionIsRecent || initialSpeechCandidate) {
+        if hasStableCleanAudio && recognitionIsRecent {
             lastVoiceActivityAt = now
         }
     }
